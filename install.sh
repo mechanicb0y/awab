@@ -1,15 +1,15 @@
 #!/bin/sh
 # awab installer — downloads the latest prebuilt binary for your platform.
 #
-#   curl -fsSL https://raw.githubusercontent.com/awab-alshandawi/awab/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/mechanicb0y/awab/main/install.sh | sh
 #
 # Env overrides:
-#   AWAB_REPO   (default: awab-alshandawi/awab)
+#   AWAB_REPO   (default: mechanicb0y/awab)
 #   AWAB_BINDIR (default: /usr/local/bin, falling back to ~/.local/bin)
 #   AWAB_VERSION(default: latest)
 set -eu
 
-REPO="${AWAB_REPO:-awab-alshandawi/awab}"
+REPO="${AWAB_REPO:-mechanicb0y/awab}"
 VERSION="${AWAB_VERSION:-latest}"
 
 err() { printf 'awab-install: %s\n' "$1" >&2; exit 1; }

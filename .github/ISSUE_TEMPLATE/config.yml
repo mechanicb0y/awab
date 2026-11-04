@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Writing a rule
-    url: https://github.com/awab-alshandawi/awab/blob/main/rules/README.md
+    url: https://github.com/mechanicb0y/awab/blob/main/rules/README.md
     about: The field reference for authoring detection rules.
