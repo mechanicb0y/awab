@@ -1,0 +1,22 @@
+id: awab-sudo-auth-failure
+title: Repeated sudo authentication failures
+description: >
+  Multiple sudo authentication failures for the same actor in a short window,
+  which can indicate an attacker attempting privilege escalation with a
+  guessed or stale password.
+author: awab
+level: medium
+references:
+  - https://attack.mitre.org/techniques/T1548/003/
+mitre:
+  tactic: privilege-escalation
+  technique: T1548.003
+logsource:
+  parser: syslog
+  service: sudo
+detection:
+  selection:
+    event_type: sudo_auth_failure
+  group_by: host
+  timewindow: 120s
+  threshold: 3

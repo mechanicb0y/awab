@@ -1,0 +1,16 @@
+id: awab-reverse-shell
+title: Reverse-shell command pattern
+description: >
+  A log line contained a command pattern characteristic of a reverse shell
+  (e.g. a bash /dev/tcp redirect, `nc -e`, or a mkfifo pipe). These give an
+  attacker an interactive shell back to a system they control.
+author: awab
+level: high
+references:
+  - https://attack.mitre.org/techniques/T1059/004/
+mitre:
+  tactic: execution
+  technique: T1059.004
+detection:
+  selection:
+    message|re: '(/dev/tcp/[0-9]|bash -i|nc .* -e |ncat .* -e |mkfifo /tmp/| -e /bin/(ba)?sh)'

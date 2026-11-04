@@ -1,0 +1,19 @@
+id: awab-useradd
+title: New user account created
+description: >
+  A new local user account was created. Benign during provisioning, but
+  noteworthy on production hosts and a common persistence step after a
+  compromise.
+author: awab
+level: medium
+references:
+  - https://attack.mitre.org/techniques/T1136/001/
+mitre:
+  tactic: persistence
+  technique: T1136.001
+logsource:
+  parser: syslog
+  service: useradd
+detection:
+  selection:
+    event_type: user_add

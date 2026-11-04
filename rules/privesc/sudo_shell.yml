@@ -1,0 +1,20 @@
+id: awab-sudo-shell
+title: Interactive shell launched via sudo
+description: >
+  A user invoked an interactive shell through sudo (e.g. `sudo bash`). This is
+  a common way to obtain a persistent root shell and sidesteps per-command
+  auditing.
+author: awab
+level: medium
+references:
+  - https://attack.mitre.org/techniques/T1548/003/
+mitre:
+  tactic: privilege-escalation
+  technique: T1548.003
+logsource:
+  parser: syslog
+  service: sudo
+detection:
+  selection:
+    event_type: sudo_command
+    command|re: '(^|/)(bash|sh|zsh|dash|ksh|csh|fish)($| )'

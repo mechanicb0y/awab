@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = ["crates/awab-core", "crates/awab-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["Awab Al-shandawi"]
+repository = "https://github.com/awab-alshandawi/awab"
+homepage = "https://github.com/awab-alshandawi/awab"
+description = "Fast, zero-dependency Linux log triage & threat-hunting engine, mapped to MITRE ATT&CK."
+keywords = ["security", "blueteam", "dfir", "logs", "mitre"]
+categories = ["command-line-utilities"]
+
+# awab deliberately uses only the Rust standard library — no third-party crates.
+# This keeps the supply chain trivially auditable and lets it build fully offline
+# on locked-down / air-gapped hosts.
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
