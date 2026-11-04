@@ -1,6 +1,8 @@
 name: Release
 
-# Tag a release to trigger: `git tag v0.1.0 && git push --tags`
+# Tag a release to trigger: `git tag v0.2.1 && git push --tags`
+# awab is a Linux tool, so releases ship static (musl) Linux binaries only.
+# For macOS/Windows, build from source: `cargo install --git <repo> awab-cli`.
 on:
   push:
     tags: ["v*"]
@@ -15,16 +17,13 @@ env:
 jobs:
   build:
     name: build ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest,  target: x86_64-unknown-linux-musl,  cross: false }
-          - { os: ubuntu-latest,  target: aarch64-unknown-linux-musl, cross: true  }
-          - { os: macos-latest,   target: x86_64-apple-darwin,        cross: false }
-          - { os: macos-latest,   target: aarch64-apple-darwin,       cross: false }
-          - { os: windows-latest, target: x86_64-pc-windows-msvc,     cross: false }
+          - { target: x86_64-unknown-linux-musl,  cross: false }
+          - { target: aarch64-unknown-linux-musl, cross: true  }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -32,7 +31,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install musl tools
-        if: endsWith(matrix.target, 'linux-musl') && matrix.cross == false
+        if: matrix.cross == false
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Install cross
@@ -47,8 +46,7 @@ jobs:
         if: matrix.cross == true
         run: cross build --release --target ${{ matrix.target }} -p awab-cli
 
-      - name: Package (unix)
-        if: runner.os != 'Windows'
+      - name: Package
         shell: bash
         run: |
           bin=target/${{ matrix.target }}/release/awab
@@ -59,23 +57,9 @@ jobs:
           tar czf "$name.tar.gz" "$name"
           shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"
 
-      - name: Package (windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          bin=target/${{ matrix.target }}/release/awab.exe
-          name="awab-${GITHUB_REF_NAME}-${{ matrix.target }}"
-          mkdir "$name"
-          cp "$bin" "$name"/
-          cp README.md LICENSE-MIT LICENSE-APACHE "$name"/
-          7z a "$name.zip" "$name"
-          sha256sum "$name.zip" > "$name.zip.sha256"
-
       - name: Upload artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: |
             awab-*.tar.gz
             awab-*.tar.gz.sha256
-            awab-*.zip
-            awab-*.zip.sha256

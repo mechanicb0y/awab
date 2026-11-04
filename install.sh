@@ -25,9 +25,9 @@ os=$(uname -s)
 arch=$(uname -m)
 
 case "$os" in
-  Linux)  plat_os="unknown-linux-musl" ;;
-  Darwin) plat_os="apple-darwin" ;;
-  *) err "unsupported OS: $os (use the releases page)";;
+  Linux) plat_os="unknown-linux-musl" ;;
+  *) err "awab ships Linux binaries only ($os detected). Build from source instead:
+    cargo install --git https://github.com/$REPO awab-cli";;
 esac
 case "$arch" in
   x86_64|amd64) plat_arch="x86_64" ;;

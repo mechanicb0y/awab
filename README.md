@@ -63,15 +63,18 @@ single-binary triage tool for Linux logs.
 
 ## Install
 
-### Prebuilt binary (recommended)
+### Prebuilt binary — Linux (recommended)
+
+awab is a Linux tool, so releases ship a static (musl) Linux binary for
+**x86_64** and **ARM64** — no glibc worries, runs on any Linux:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/mechanicb0y/awab/main/install.sh | sh
 ```
 
-Or grab a binary for your platform from the [releases page](https://github.com/mechanicb0y/awab/releases) and drop it on your `$PATH`.
+Or grab the `.tar.gz` from the [releases page](https://github.com/mechanicb0y/awab/releases) and drop the binary on your `$PATH`.
 
-### From source
+### From source (any OS with Rust)
 
 Requires a recent Rust toolchain ([rustup](https://rustup.rs)):
 
@@ -82,7 +85,7 @@ cargo build --release    # binary at target/release/awab
 ```
 
 Because there are no dependencies, this builds with no network access once the
-toolchain is installed.
+toolchain is installed — on Linux, macOS, or Windows.
 
 ## Usage
 
