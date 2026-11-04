@@ -178,22 +178,29 @@ fn enrich(ev: &mut Event) {
     if proc.starts_with("sudo") && enrich_sudo(ev, &msg) {
         return;
     }
-    if proc.starts_with("useradd") {
-        if let (Some(name), uid) = (value_after(&msg, "name="), value_after(&msg, "UID=")) {
+    // useradd/usermod emit BOTH "new group:" and "new user:" lines, so key off
+    // the message text, not just the process name.
+    if proc.starts_with("useradd") || proc.starts_with("usermod") || proc.starts_with("groupadd") {
+        if msg.contains("new user:") {
             ev.set("event_type", "user_add");
             ev.set("service", "useradd");
-            ev.set("new_user", name.trim_end_matches(','));
-            if let Some(u) = uid {
+            if let Some(name) = value_after(&msg, "name=") {
+                ev.set("new_user", name.trim_end_matches(','));
+            }
+            if let Some(u) = value_after(&msg, "UID=") {
                 ev.set("uid", u.trim_end_matches(','));
             }
             return;
         }
-    }
-    if proc.starts_with("groupadd") {
-        if let Some(name) = value_after(&msg, "name=") {
+        if msg.contains("new group:") {
             ev.set("event_type", "group_add");
             ev.set("service", "groupadd");
-            ev.set("new_group", name.trim_end_matches(','));
+            if let Some(name) = value_after(&msg, "name=") {
+                ev.set("new_group", name.trim_end_matches(','));
+            }
+            if let Some(g) = value_after(&msg, "GID=") {
+                ev.set("gid", g.trim_end_matches(','));
+            }
             return;
         }
     }
@@ -268,6 +275,11 @@ fn enrich_sudo(ev: &mut Event, msg: &str) -> bool {
         }
         let command = msg[cmd_idx + "COMMAND=".len()..].trim();
         ev.set("command", command);
+        // The executable actually run (first token), so rules can match the
+        // program without false-matching a shell path passed as an argument.
+        if let Some(bin) = command.split_whitespace().next() {
+            ev.set("command_bin", bin);
+        }
         return true;
     }
     false
@@ -344,6 +356,31 @@ mod tests {
         assert_eq!(ev.get("event_type"), Some("user_add"));
         assert_eq!(ev.get("new_user"), Some("backdoor"));
         assert_eq!(ev.get("uid"), Some("0"));
+    }
+
+    #[test]
+    fn new_group_is_group_not_user() {
+        // Regression: useradd emits a "new group:" line that must NOT be
+        // classified as a user account creation.
+        let line = "Nov  4 11:05:00 web01 useradd[2001]: new group: name=backdoor, GID=1003";
+        let ev = parse_line(line, 4, None).unwrap();
+        assert_eq!(ev.get("event_type"), Some("group_add"));
+        assert_eq!(ev.get("new_group"), Some("backdoor"));
+        assert_eq!(ev.get("new_user"), None);
+    }
+
+    #[test]
+    fn sudo_command_bin_is_executable_not_arg() {
+        // Regression: a shell path passed as an argument (useradd -s /bin/bash)
+        // must not make command_bin look like a shell.
+        let line = "Nov  4 07:15:08 kali sudo[11293]:     kali : TTY=pts/0 ; PWD=/home/kali ; USER=root ; COMMAND=/usr/sbin/useradd -g 0 -s /bin/bash butter";
+        let ev = parse_line(line, 6, None).unwrap();
+        assert_eq!(ev.get("event_type"), Some("sudo_command"));
+        assert_eq!(ev.get("command_bin"), Some("/usr/sbin/useradd"));
+
+        let shell = "Nov  4 02:17:23 kali sudo[1]:     kali : TTY=pts/2 ; PWD=/tmp ; USER=root ; COMMAND=/usr/bin/sh -c 'id'";
+        let ev = parse_line(shell, 7, None).unwrap();
+        assert_eq!(ev.get("command_bin"), Some("/usr/bin/sh"));
     }
 
     #[test]

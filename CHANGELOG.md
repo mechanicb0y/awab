@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-04
+
+### Fixed
+- useradd `new group:` lines were misclassified as user-account creation,
+  doubling the noise from account provisioning. Groups are now `group_add`.
+- "Interactive shell launched via sudo" false-fired when a shell path was passed
+  as an argument (e.g. `useradd -s /bin/bash`). Detection now matches the
+  executable actually run via a new `command_bin` field.
+
 ## [0.1.0] - 2026-11-04
 
 First public release.
