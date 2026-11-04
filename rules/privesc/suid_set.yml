@@ -1,0 +1,16 @@
+id: awab-suid-set
+title: SUID/SGID bit set on a file
+description: >
+  A command set the setuid/setgid bit (chmod u+s or a 4xxx/6xxx mode). This
+  creates a privilege-escalation or persistence backdoor — a SUID-root binary
+  runs as root for any user who executes it.
+author: awab
+level: high
+references:
+  - https://attack.mitre.org/techniques/T1548/001/
+mitre:
+  tactic: privilege-escalation
+  technique: T1548.001
+detection:
+  selection:
+    command|re: 'chmod .*(u?\+s|[46][0-7][0-7][0-7])'

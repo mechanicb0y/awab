@@ -102,4 +102,18 @@ detection:
             loaded.errors
         );
     }
+
+    #[test]
+    fn auditd_execve_triggers_suid_rule() {
+        // End-to-end: auditd parser -> command field -> behavioral rule.
+        let line =
+            "type=EXECVE msg=audit(1762000001.100:501): argc=3 a0=\"chmod\" a1=\"4755\" a2=\"/bin/bash\"\n";
+        let rules = loader::load_builtin().rules;
+        let findings = parse_and_scan(line, ParserKind::Auditd, Some("audit.log"), &rules);
+        assert!(
+            findings.iter().any(|f| f.rule_id == "awab-suid-set"),
+            "expected SUID detection from auditd EXECVE, got {:?}",
+            findings.iter().map(|f| &f.rule_id).collect::<Vec<_>>()
+        );
+    }
 }

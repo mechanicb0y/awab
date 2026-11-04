@@ -73,9 +73,18 @@ Enriched fields depend on the parser:
 - **syslog / auth.log:** `event_type` (`auth_failure`, `auth_success`,
   `sudo_command`, `sudo_auth_failure`, `user_add`, `group_add`), `source_ip`,
   `user`, `auth_method`, `invalid_user`, `actor`, `target_user`, `command`,
-  `new_user`, `uid`, `new_group`, `service`
+  `command_bin`, `new_user`, `uid`, `gid`, `home`, `shell`, `new_group`,
+  `service`
 - **web access logs:** `event_type` (`web_request`), `source_ip`, `http_method`,
   `url`, `http_status`, `http_proto`, `user_agent`
+- **auditd (`audit.log`):** `audit_type` (EXECVE, SYSCALL, …), `event_type`
+  (`exec`, `syscall`, `auth`), `command`, `command_bin`, `exe`, `comm`,
+  `audit_key`, `uid`, `auid`, `success`, `user`, `outcome`
+
+**Tip:** `command` is populated by both sudo commands *and* auditd EXECVE
+records, so a rule that matches `command` works across both without caring which
+log it came from — that's how the SUID / log-wipe / persistence rules are
+written.
 
 ## Correlation (catching bursts)
 
