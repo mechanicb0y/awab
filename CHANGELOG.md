@@ -22,5 +22,5 @@ First public release.
 - Built-in regex engine (practical subset) for rule authors.
 - CI and cross-platform release workflows.
 
-[Unreleased]: https://github.com/awab-alshandawi/awab/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/awab-alshandawi/awab/releases/tag/v0.1.0
+[Unreleased]: https://github.com/mechanicb0y/awab/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/mechanicb0y/awab/releases/tag/v0.1.0

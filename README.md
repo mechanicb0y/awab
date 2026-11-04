@@ -7,8 +7,8 @@
 Point it at a log. Get back a ranked list of what looks like an attack.
 No SIEM, no agent, no cloud, no config — just a single static binary.
 
-[![CI](https://github.com/awab-alshandawi/awab/actions/workflows/ci.yml/badge.svg)](https://github.com/awab-alshandawi/awab/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/awab-alshandawi/awab?sort=semver)](https://github.com/awab-alshandawi/awab/releases)
+[![CI](https://github.com/mechanicb0y/awab/actions/workflows/ci.yml/badge.svg)](https://github.com/mechanicb0y/awab/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/mechanicb0y/awab?sort=semver)](https://github.com/mechanicb0y/awab/releases)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](#license)
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 
@@ -64,17 +64,17 @@ single-binary triage tool for Linux logs.
 ### Prebuilt binary (recommended)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/awab-alshandawi/awab/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/mechanicb0y/awab/main/install.sh | sh
 ```
 
-Or grab a binary for your platform from the [releases page](https://github.com/awab-alshandawi/awab/releases) and drop it on your `$PATH`.
+Or grab a binary for your platform from the [releases page](https://github.com/mechanicb0y/awab/releases) and drop it on your `$PATH`.
 
 ### From source
 
 Requires a recent Rust toolchain ([rustup](https://rustup.rs)):
 
 ```sh
-cargo install --git https://github.com/awab-alshandawi/awab awab-cli
+cargo install --git https://github.com/mechanicb0y/awab awab-cli
 # or, in a clone:
 cargo build --release    # binary at target/release/awab
 ```
@@ -185,7 +185,7 @@ the single most valuable contribution you can make — see
 ## Contributing
 
 Issues and PRs are very welcome — especially new detection rules. Start with
-the [good first issues](https://github.com/awab-alshandawi/awab/labels/good%20first%20issue)
+the [good first issues](https://github.com/mechanicb0y/awab/labels/good%20first%20issue)
 and read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License

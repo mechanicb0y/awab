@@ -15,7 +15,7 @@ strong, discussed justification. When in doubt, open an issue first.
 
 The highest-value thing you can add is a **detection rule**. No Rust required —
 see [rules/README.md](rules/README.md). Browse the
-[`good first issue`](https://github.com/awab-alshandawi/awab/labels/good%20first%20issue)
+[`good first issue`](https://github.com/mechanicb0y/awab/labels/good%20first%20issue)
 label for rule requests.
 
 ## Development
