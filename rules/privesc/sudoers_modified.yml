@@ -1,0 +1,23 @@
+id: awab-sudoers-modified
+title: Modification of the sudoers configuration
+description: >
+  A command run via sudo referenced the sudoers configuration (/etc/sudoers or
+  /etc/sudoers.d). Attackers weaken sudo policy here to gain or keep elevated
+  access (e.g. appending NOPASSWD or disabling tty checks). Confirm this was a
+  deliberate admin change made with visudo.
+author: awab
+level: high
+references:
+  - https://attack.mitre.org/techniques/T1548/003/
+mitre:
+  tactic: privilege-escalation
+  technique: T1548.003
+logsource:
+  parser: syslog
+  service: sudo
+detection:
+  selection:
+    event_type: sudo_command
+    command|contains:
+      - /etc/sudoers
+      - sudoers.d

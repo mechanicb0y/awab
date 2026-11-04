@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-04
+
+### Added
+- Three detections for backdoor-account and sudo-policy tampering, surfaced by
+  real-world testing:
+  - `awab-useradd-rootgroup` — new account with primary group GID 0 (high)
+  - `awab-useradd-roothome` — new account homed in /root (high)
+  - `awab-sudoers-modified` — a sudo command touching /etc/sudoers(.d) (high)
+- The syslog parser now enriches user-creation events with `gid`, `home`, and
+  `shell`, so rules can reason about them.
+
 ## [0.1.1] - 2026-11-04
 
 ### Fixed

@@ -1,0 +1,20 @@
+id: awab-useradd-roothome
+title: New account with home directory /root
+description: >
+  A new user account was created with its home directory set to /root. A
+  legitimate second account almost never lives in root's home; this points to
+  a backdoor account sharing root's files and environment.
+author: awab
+level: high
+references:
+  - https://attack.mitre.org/techniques/T1136/001/
+mitre:
+  tactic: persistence
+  technique: T1136.001
+logsource:
+  parser: syslog
+  service: useradd
+detection:
+  selection:
+    event_type: user_add
+    home: /root
