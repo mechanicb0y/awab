@@ -1,0 +1,20 @@
+id: awab-useradd-rootgroup
+title: New account added to the root group (GID 0)
+description: >
+  A new user account was created with primary group GID 0 (root). Combined
+  with a normal-looking UID, this is a stealthy way to grant an account
+  root-group privileges — a common backdoor/persistence pattern.
+author: awab
+level: high
+references:
+  - https://attack.mitre.org/techniques/T1136/001/
+mitre:
+  tactic: persistence
+  technique: T1136.001
+logsource:
+  parser: syslog
+  service: useradd
+detection:
+  selection:
+    event_type: user_add
+    gid: "0"

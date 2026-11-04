@@ -190,6 +190,15 @@ fn enrich(ev: &mut Event) {
             if let Some(u) = value_after(&msg, "UID=") {
                 ev.set("uid", u.trim_end_matches(','));
             }
+            if let Some(g) = value_after(&msg, "GID=") {
+                ev.set("gid", g.trim_end_matches(','));
+            }
+            if let Some(h) = value_after(&msg, "home=") {
+                ev.set("home", h.trim_end_matches(','));
+            }
+            if let Some(s) = value_after(&msg, "shell=") {
+                ev.set("shell", s.trim_end_matches(','));
+            }
             return;
         }
         if msg.contains("new group:") {
@@ -381,6 +390,16 @@ mod tests {
         let shell = "Nov  4 02:17:23 kali sudo[1]:     kali : TTY=pts/2 ; PWD=/tmp ; USER=root ; COMMAND=/usr/bin/sh -c 'id'";
         let ev = parse_line(shell, 7, None).unwrap();
         assert_eq!(ev.get("command_bin"), Some("/usr/bin/sh"));
+    }
+
+    #[test]
+    fn useradd_enriches_gid_and_home() {
+        let line = "2026-09-25T07:15:08-04:00 kali useradd[11296]: new user: name=butter, UID=1006, GID=0, home=/root, shell=/bin/bash, from=none";
+        let ev = parse_line(line, 8, None).unwrap();
+        assert_eq!(ev.get("event_type"), Some("user_add"));
+        assert_eq!(ev.get("gid"), Some("0"));
+        assert_eq!(ev.get("home"), Some("/root"));
+        assert_eq!(ev.get("shell"), Some("/bin/bash"));
     }
 
     #[test]
