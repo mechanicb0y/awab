@@ -1,5 +1,6 @@
 //! awab — fast, zero-dependency Linux log triage & threat-hunting engine.
 
+mod banner;
 mod input;
 mod output;
 
@@ -18,12 +19,18 @@ fn main() {
     }
 }
 
+fn use_color() -> bool {
+    std::env::var_os("NO_COLOR").is_none() && !std::env::args().any(|a| a == "--no-color")
+}
+
 fn run() -> Result<(), String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let first = match args.first() {
         Some(a) => a.as_str(),
         None => {
-            print_help();
+            // No args: show the banner and a nudge, like msfconsole / hydra.
+            print!("{}", banner::big(use_color()));
+            println!("\n  Run 'awab -h' for help, or 'awab scan <logfile>' to start hunting.\n");
             return Ok(());
         }
     };
@@ -44,27 +51,38 @@ fn run() -> Result<(), String> {
 }
 
 fn print_help() {
+    print!("{}", banner::big(use_color()));
     println!(
-        "awab {VERSION} — fast, zero-dependency Linux log triage & threat-hunting engine\n\n\
-         USAGE:\n\
-         \x20 awab scan [TARGET...] [OPTIONS]   Scan logs (files, dirs, or - for stdin)\n\
-         \x20 awab rules list [OPTIONS]          List loaded detection rules\n\
-         \x20 awab rules validate [PATH...]      Validate rule files\n\
-         \x20 awab update                        How to update the rule set\n\n\
-         SCAN OPTIONS:\n\
-         \x20 --rules <DIR>       Load extra rules from a directory\n\
-         \x20 --no-builtin        Ignore the rules embedded in the binary\n\
-         \x20 --parser <P>        auto | syslog   (default: auto)\n\
-         \x20 --format <F>        table | json    (default: table)\n\
-         \x20 --min-level <L>     info|low|medium|high|critical (default: info)\n\
-         \x20 --html <FILE>       Also write a standalone HTML report\n\
-         \x20 --no-color          Disable colored output\n\n\
-         EXAMPLES:\n\
-         \x20 awab scan /var/log/auth.log\n\
-         \x20 journalctl -o short-iso | awab scan -\n\
-         \x20 awab scan /var/log --format json > findings.json\n\
-         \x20 awab scan auth.log --html report.html\n\n\
-         Exit codes: 0 = no high+ findings, 1 = high/critical findings, 2 = error."
+        "\n\
+Syntax: awab scan [TARGET...] [options]\n\
+\x20       awab rules list | validate [PATH...]\n\
+\x20       awab update\n\
+\n\
+Targets:\n\
+\x20 FILE | DIR | -        a log file, a directory of logs, or - for stdin\n\
+\n\
+Scan options:\n\
+\x20 -r, --rules DIR       load extra detection rules from DIR\n\
+\x20     --no-builtin      do not use the rules embedded in the binary\n\
+\x20 -p, --parser P        auto | syslog | web                 (default: auto)\n\
+\x20 -f, --format F        table | json                        (default: table)\n\
+\x20 -l, --min-level L     info | low | medium | high | critical (default: info)\n\
+\x20 -o, --html FILE       also write an HTML report to FILE\n\
+\x20     --no-color        disable colored output\n\
+\x20 -h, --help            show this help\n\
+\n\
+Rules:\n\
+\x20 awab rules list              list every loaded detection\n\
+\x20 awab rules validate [PATH]   check rule files for errors\n\
+\n\
+Examples:\n\
+\x20 awab scan /var/log/auth.log\n\
+\x20 awab scan /var/log -l high\n\
+\x20 journalctl -o short-iso | awab scan -\n\
+\x20 awab scan /var/log/nginx -o report.html\n\
+\x20 awab scan /var/log -f json > findings.json\n\
+\n\
+Exit: 0 = clean, 1 = high/critical findings, 2 = error."
     );
 }
 
@@ -101,30 +119,30 @@ fn cmd_scan(args: &[String]) -> Result<(), String> {
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
-            "--rules" => rules_dir = Some(PathBuf::from(next_val(&mut it, "--rules")?)),
+            "-r" | "--rules" => rules_dir = Some(PathBuf::from(next_val(&mut it, "--rules")?)),
             "--no-builtin" => no_builtin = true,
-            "--parser" => {
+            "-p" | "--parser" => {
                 let v = next_val(&mut it, "--parser")?;
                 parser = ParserKind::from_name(&v)
-                    .ok_or_else(|| format!("unknown parser `{v}` (use auto|syslog)"))?;
+                    .ok_or_else(|| format!("unknown parser `{v}` (use auto|syslog|web)"))?;
             }
-            "--format" => {
+            "-f" | "--format" => {
                 format = next_val(&mut it, "--format")?;
                 if format != "table" && format != "json" {
                     return Err(format!("unknown format `{format}` (use table|json)"));
                 }
             }
-            "--min-level" => {
+            "-l" | "--min-level" => {
                 let v = next_val(&mut it, "--min-level")?;
                 min_level = Level::parse(&v).ok_or_else(|| format!("unknown level `{v}`"))?;
             }
-            "--html" => html = Some(PathBuf::from(next_val(&mut it, "--html")?)),
+            "-o" | "--html" => html = Some(PathBuf::from(next_val(&mut it, "--html")?)),
             "--no-color" => no_color = true,
             "-h" | "--help" => {
                 print_help();
                 return Ok(());
             }
-            s if s.starts_with("--") => return Err(format!("unknown option `{s}`")),
+            s if s.starts_with('-') && s != "-" => return Err(format!("unknown option `{s}`")),
             s => targets.push(s.to_string()),
         }
     }
@@ -166,7 +184,8 @@ fn cmd_scan(args: &[String]) -> Result<(), String> {
     if format == "json" {
         output::json::render(&findings, &stats)?;
     } else {
-        let color = !no_color && std::env::var_os("NO_COLOR").is_none();
+        let color = !no_color && use_color();
+        print!("{}", banner::run_header(color));
         output::terminal::render(&findings, &stats, color);
     }
 
