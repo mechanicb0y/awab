@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Build
+        run: cargo build --all --verbose
+      - name: Test
+        run: cargo test --all --verbose
+      - name: Validate bundled rules
+        run: cargo run --quiet -p awab-cli -- rules validate
+
+  # awab must stay dependency-free. This fails the build if any third-party
+  # crate sneaks into the dependency tree.
+  no-deps:
+    name: zero-dependency guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Assert no third-party dependencies
+        run: |
+          # Every entry in the lockfile should be a local workspace crate.
+          cargo generate-lockfile
+          extern=$(cargo metadata --format-version 1 --no-deps \
+            | grep -o '"name":"[^"]*"' || true)
+          deps=$(cargo tree --prefix none --no-dedupe 2>/dev/null \
+            | grep -v '^awab' | grep -v '^$' | sort -u || true)
+          if [ -n "$deps" ]; then
+            echo "::error::Third-party dependencies detected:"; echo "$deps"; exit 1
+          fi
+          echo "OK: no third-party dependencies."

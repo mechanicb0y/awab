@@ -1,0 +1,19 @@
+id: awab-web-path-traversal
+title: Path traversal / injection probe in web request
+description: >
+  A web request URL contained a directory-traversal sequence, a reference to a
+  sensitive system file, or a SQL/script-injection marker — typical of
+  automated vulnerability scanning or exploitation attempts.
+author: awab
+level: medium
+references:
+  - https://attack.mitre.org/techniques/T1190/
+mitre:
+  tactic: initial-access
+  technique: T1190
+logsource:
+  parser: web
+detection:
+  selection:
+    event_type: web_request
+    url|re: '(\.\./|\.\.%2f|/etc/passwd|/etc/shadow|union(\s|\+)select|<script)'

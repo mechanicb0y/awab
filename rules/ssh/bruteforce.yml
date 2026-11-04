@@ -1,0 +1,21 @@
+id: awab-ssh-bruteforce
+title: SSH brute-force attempt
+description: >
+  A single source IP produced many failed SSH password logins in a short
+  window, indicating an automated password-guessing (brute-force) attack.
+author: awab
+level: high
+references:
+  - https://attack.mitre.org/techniques/T1110/001/
+mitre:
+  tactic: credential-access
+  technique: T1110.001
+logsource:
+  parser: syslog
+  service: sshd
+detection:
+  selection:
+    event_type: auth_failure
+  group_by: source_ip
+  timewindow: 60s
+  threshold: 5

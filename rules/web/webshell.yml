@@ -1,0 +1,19 @@
+id: awab-web-shell-access
+title: Possible web shell access
+description: >
+  A web request targeted a path or parameter matching common web-shell names
+  or code-execution markers (c99, r57, wso, eval(, base64_decode, system()).
+  Web shells give an attacker remote command execution on the server.
+author: awab
+level: high
+references:
+  - https://attack.mitre.org/techniques/T1505/003/
+mitre:
+  tactic: persistence
+  technique: T1505.003
+logsource:
+  parser: web
+detection:
+  selection:
+    event_type: web_request
+    url|re: '/(c99|r57|wso|b374k|backdoor|webshell|cmd|shell)\.(php|jsp|asp|aspx)|eval\(|base64_decode|system\('
