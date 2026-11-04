@@ -91,8 +91,11 @@ awab scan /var/log/auth.log
 # Scan a whole directory of logs
 awab scan /var/log
 
-# Pipe live journal output straight in
+# Pipe live journal output straight in (what to use on Kali / systemd distros)
 journalctl -o short-iso | awab scan -
+
+# Scan the audit log (auditd)
+awab scan /var/log/audit/audit.log
 
 # Machine-readable output for another tool / SIEM
 awab scan /var/log/auth.log --format json > findings.json
@@ -100,9 +103,13 @@ awab scan /var/log/auth.log --format json > findings.json
 # A shareable, self-contained HTML report
 awab scan /var/log/auth.log --html report.html
 
-# Only show the serious stuff
+# Only show the serious stuff (output groups by rule; -a/--full shows every hit)
 awab scan /var/log --min-level high
 ```
+
+> **On Kali / modern systemd distros** there's often no `/var/log/auth.log` —
+> logs live in the journal. Use `journalctl -o short-iso | awab scan -`. awab
+> will remind you of this if you point it at a missing log file.
 
 Exit codes: `0` = nothing high or above, `1` = high/critical findings, `2` =
 error. That makes `awab` a one-line tripwire in a cron job:
@@ -113,13 +120,14 @@ awab scan /var/log/auth.log --min-level high >/dev/null || notify-admin
 
 ## What it detects today
 
-v0.1 ships detections for the most common Linux attack signatures:
+awab ships detections for the most common Linux attack signatures:
 
 | Area | Examples |
 |------|----------|
 | **SSH** | brute force, password spray, direct root login |
-| **Privilege escalation** | interactive shell via sudo, repeated sudo auth failures |
-| **Persistence** | new user accounts, **UID-0 backdoor accounts** |
+| **Privilege escalation** | interactive shell via sudo, repeated sudo auth failures, **SUID/SGID bit set** |
+| **Persistence** | new user accounts, **UID-0 / root-group / root-home backdoor accounts**, **cron & systemd persistence** |
+| **Defense evasion** | **system log wiping**, **shell history tampering** |
 | **Web** | web-shell access, path-traversal / injection probes |
 | **Execution** | reverse-shell command patterns |
 
@@ -135,8 +143,8 @@ contributed rule.
 ```
 
 1. **Parsers** normalize messy log formats (`auth.log`/syslog, journald, web
-   access logs) into structured events with fields like `source_ip`, `user`,
-   and `event_type`.
+   access logs, and **auditd** `audit.log`) into structured events with fields
+   like `source_ip`, `user`, `command`, and `event_type`.
 2. **Rules** — small YAML files — match those events. They can match single
    events or **correlate bursts** (e.g. "5+ failures from one IP within 60s").
 3. **Findings** come out ranked by severity, each tagged with its MITRE ATT&CK

@@ -25,8 +25,7 @@ pub fn collect_sources(targets: &[String]) -> Result<Vec<Source>, String> {
         if path.is_dir() {
             read_dir(path, &mut out);
         } else {
-            let text = std::fs::read_to_string(path)
-                .map_err(|e| format!("reading {}: {e}", path.display()))?;
+            let text = std::fs::read_to_string(path).map_err(|e| read_error(t, &e))?;
             out.push(Source {
                 name: t.clone(),
                 text,
@@ -34,6 +33,29 @@ pub fn collect_sources(targets: &[String]) -> Result<Vec<Source>, String> {
         }
     }
     Ok(out)
+}
+
+/// Turn a file read error into a helpful message. On systemd distros the
+/// classic log files often don't exist (logs live in the journal), so point the
+/// user at journalctl instead of a bare "not found".
+fn read_error(target: &str, e: &std::io::Error) -> String {
+    if e.kind() == std::io::ErrorKind::NotFound {
+        let looks_like_syslog = target.starts_with("/var/log")
+            && !target.ends_with("audit.log")
+            && !target.contains("nginx")
+            && !target.contains("apache")
+            && !target.contains("access");
+        if looks_like_syslog {
+            return format!(
+                "{target}: no such file.\n\
+                 On systemd-based distros (Kali, modern Debian/Ubuntu) this log often\n\
+                 doesn't exist — the logs live in the journal. Try:\n\
+                 \x20 journalctl -o short-iso | awab scan -"
+            );
+        }
+        return format!("{target}: no such file");
+    }
+    format!("reading {target}: {e}")
 }
 
 fn read_stdin(out: &mut Vec<Source>) -> Result<(), String> {

@@ -1,0 +1,16 @@
+id: awab-systemd-persistence
+title: systemd service persistence
+description: >
+  A command enabled a systemd unit or wrote a unit file under the systemd
+  directories. Attackers install and enable a service so their payload restarts
+  on boot — a durable persistence mechanism.
+author: awab
+level: medium
+references:
+  - https://attack.mitre.org/techniques/T1543/002/
+mitre:
+  tactic: persistence
+  technique: T1543.002
+detection:
+  selection:
+    command|re: 'systemctl (enable|--now)|/etc/systemd/system/|/lib/systemd/system/'

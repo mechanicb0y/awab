@@ -1,0 +1,16 @@
+id: awab-clear-history
+title: Shell history tampering
+description: >
+  A command cleared or disabled shell history (history -c, unsetting HISTFILE,
+  pointing it at /dev/null, or deleting .bash_history). Attackers do this to
+  hide the commands they ran.
+author: awab
+level: medium
+references:
+  - https://attack.mitre.org/techniques/T1070/003/
+mitre:
+  tactic: defense-evasion
+  technique: T1070.003
+detection:
+  selection:
+    command|re: 'history -c|HISTFILE=/dev/null|unset HISTFILE|(rm |shred |ln ).*bash_history'

@@ -1,5 +1,6 @@
 //! Log parsers. Each turns raw text into normalized [`Event`]s.
 
+pub mod auditd;
 pub mod syslog;
 pub mod web;
 
@@ -10,6 +11,7 @@ pub enum ParserKind {
     Auto,
     Syslog,
     Web,
+    Auditd,
 }
 
 impl ParserKind {
@@ -18,6 +20,7 @@ impl ParserKind {
             "auto" => ParserKind::Auto,
             "syslog" | "auth" | "authlog" => ParserKind::Syslog,
             "web" | "access" | "nginx" | "apache" => ParserKind::Web,
+            "auditd" | "audit" => ParserKind::Auditd,
             _ => return None,
         })
     }
@@ -27,6 +30,7 @@ impl ParserKind {
             ParserKind::Auto => "auto",
             ParserKind::Syslog => "syslog",
             ParserKind::Web => "web",
+            ParserKind::Auditd => "auditd",
         }
     }
 }
@@ -34,6 +38,9 @@ impl ParserKind {
 /// Detect which parser best fits a block of text by sampling its first lines.
 pub fn detect(text: &str) -> ParserKind {
     for line in text.lines().filter(|l| !l.trim().is_empty()).take(10) {
+        if auditd::looks_like(line) {
+            return ParserKind::Auditd;
+        }
         if web::looks_like(line) {
             return ParserKind::Web;
         }
@@ -54,6 +61,7 @@ pub fn parse_text(text: &str, kind: ParserKind, source: Option<&str>) -> Vec<Eve
         }
         let ev = match chosen {
             ParserKind::Web => web::parse_line(line, i + 1, source),
+            ParserKind::Auditd => auditd::parse_line(line, i + 1, source),
             ParserKind::Syslog | ParserKind::Auto => syslog::parse_line(line, i + 1, source),
         };
         if let Some(ev) = ev {

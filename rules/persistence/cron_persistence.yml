@@ -1,0 +1,16 @@
+id: awab-cron-persistence
+title: Cron job creation or modification
+description: >
+  A command edited crontabs or cron directories (/etc/cron*, /var/spool/cron).
+  Attackers add cron jobs to re-establish access on a schedule — a common
+  persistence mechanism.
+author: awab
+level: medium
+references:
+  - https://attack.mitre.org/techniques/T1053/003/
+mitre:
+  tactic: persistence
+  technique: T1053.003
+detection:
+  selection:
+    command|re: 'crontab|/etc/cron|/var/spool/cron'

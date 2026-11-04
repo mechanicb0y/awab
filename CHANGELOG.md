@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-04
+
+### Added
+- **auditd parser** for `/var/log/audit/audit.log` (EXECVE / SYSCALL / USER_*),
+  auto-detected. EXECVE records are reconstructed into full command lines
+  (hex-encoded args decoded), so behavioral rules work on everything a host
+  runs, not just what goes through sudo.
+- Five behavioral detections, matching both sudo and auditd command lines:
+  - `awab-clear-logs` — deletion/truncation of /var/log or the journal (high)
+  - `awab-clear-history` — shell history tampering (medium)
+  - `awab-suid-set` — setting the SUID/SGID bit (high)
+  - `awab-cron-persistence` — crontab / cron directory changes (medium)
+  - `awab-systemd-persistence` — enabling or installing a systemd unit (medium)
+- A helpful hint when a classic log path (e.g. `/var/log/auth.log`) doesn't
+  exist, pointing at the `journalctl` pipe.
+
 ## [0.1.3] - 2026-11-04
 
 ### Changed
