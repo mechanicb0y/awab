@@ -17,4 +17,4 @@ logsource:
 detection:
   selection:
     event_type: sudo_command
-    command|re: '(^|/)(bash|sh|zsh|dash|ksh|csh|fish)($| )'
+    command_bin|re: '(^|/)(bash|sh|zsh|dash|ksh|csh|fish)$'
