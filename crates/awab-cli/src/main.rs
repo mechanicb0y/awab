@@ -69,6 +69,7 @@ Scan options:\n\
 \x20 -l, --min-level L     info | low | medium | high | critical (default: info)\n\
 \x20 -o, --html FILE       also write an HTML report to FILE\n\
 \x20     --no-color        disable colored output\n\
+\x20 -a, --full            show every finding (don't collapse repeats)\n\
 \x20 -h, --help            show this help\n\
 \n\
 Rules:\n\
@@ -115,6 +116,7 @@ fn cmd_scan(args: &[String]) -> Result<(), String> {
     let mut min_level = Level::Info;
     let mut html: Option<PathBuf> = None;
     let mut no_color = false;
+    let mut full = false;
 
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -138,6 +140,7 @@ fn cmd_scan(args: &[String]) -> Result<(), String> {
             }
             "-o" | "--html" => html = Some(PathBuf::from(next_val(&mut it, "--html")?)),
             "--no-color" => no_color = true,
+            "-a" | "--full" => full = true,
             "-h" | "--help" => {
                 print_help();
                 return Ok(());
@@ -186,7 +189,7 @@ fn cmd_scan(args: &[String]) -> Result<(), String> {
     } else {
         let color = !no_color && use_color();
         print!("{}", banner::run_header(color));
-        output::terminal::render(&findings, &stats, color);
+        output::terminal::render(&findings, &stats, color, full);
     }
 
     if findings.iter().any(|f| f.level >= Level::High) {

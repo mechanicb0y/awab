@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-04
+
+### Changed
+- Terminal output is now organized by rule: the summary shows one row per rule
+  with an occurrence count, and detail blocks are grouped by rule and capped at
+  3 each (with a "… and N more" note) so a flood of one detection no longer
+  buries the rest. Use `-a`/`--full` for every finding, or `-f json`.
+
 ## [0.1.2] - 2026-11-04
 
 ### Added
