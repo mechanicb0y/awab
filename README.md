@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/banner.png" alt="awab — hunt threats in Linux logs, straight from the terminal" width="680">
+
 # awab
 
 **Fast, zero-dependency Linux log triage & threat-hunting engine — mapped to MITRE ATT&CK.**
