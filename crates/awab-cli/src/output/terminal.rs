@@ -12,7 +12,6 @@ const RED: &str = "\x1b[31m";
 const BRIGHT_RED: &str = "\x1b[91m";
 const YELLOW: &str = "\x1b[33m";
 const BLUE: &str = "\x1b[34m";
-const CYAN: &str = "\x1b[96m";
 const GREEN: &str = "\x1b[32m";
 
 fn when(f: &Finding) -> String {
@@ -49,17 +48,16 @@ fn paint(s: &str, code: &str, color: bool) -> String {
 }
 
 pub fn render(findings: &[Finding], stats: &Stats, color: bool) {
-    println!("\n{} — Linux log triage\n", paint("awab", CYAN, color));
     println!(
-        "Scanned {} event(s) with {} rule(s).",
-        stats.events, stats.rules
+        "[*] loaded {} rules, parsed {} log events",
+        stats.rules, stats.events
     );
 
     if findings.is_empty() {
         println!(
-            "\n{}\n",
+            "{}",
             paint(
-                "No findings. Nothing suspicious matched the loaded rules.",
+                "[+] no findings - nothing matched the loaded rules",
                 GREEN,
                 color
             )
@@ -71,8 +69,9 @@ pub fn render(findings: &[Finding], stats: &Stats, color: bool) {
     for f in findings {
         counts[f.level as usize] += 1;
     }
+    let bang = paint("[!]", BRIGHT_RED, color);
     println!(
-        "Found {} finding(s): {} critical, {} high, {} medium, {} low, {} info.\n",
+        "{bang} {} finding(s): {} critical, {} high, {} medium, {} low, {} info\n",
         findings.len(),
         counts[Level::Critical as usize],
         counts[Level::High as usize],
@@ -81,21 +80,20 @@ pub fn render(findings: &[Finding], stats: &Stats, color: bool) {
         counts[Level::Info as usize],
     );
 
-    let headers = ["LEVEL", "RULE", "KEY", "COUNT", "WHEN", "ATT&CK"];
+    let headers = ["SEVERITY", "RULE", "KEY", "HITS", "ATT&CK"];
     let rows: Vec<Vec<String>> = findings
         .iter()
         .map(|f| {
             vec![
                 f.level.as_str().to_uppercase(),
-                truncate(&f.title, 40),
+                truncate(&f.title, 38),
                 f.group_key.clone().unwrap_or_else(|| "-".into()),
                 f.count.to_string(),
-                when(f),
                 attack(f),
             ]
         })
         .collect();
-    print_table(&headers, &rows);
+    print_cols(&headers, &rows, color);
     println!();
 
     for f in findings {
@@ -160,8 +158,8 @@ pub fn render_rule_list(rules: &[Rule]) {
             ]
         })
         .collect();
-    print_table(&headers, &rows);
-    println!("{} rule(s) loaded.", rules.len());
+    print_cols(&headers, &rows, false);
+    println!("\n[*] {} rule(s) loaded.", rules.len());
 }
 
 fn truncate(s: &str, max: usize) -> String {
@@ -182,7 +180,8 @@ fn pad(s: &str, width: usize) -> String {
     }
 }
 
-fn print_table(headers: &[&str], rows: &[Vec<String>]) {
+/// Print plain, left-aligned columns (nmap/hydra style) — no borders.
+fn print_cols(headers: &[&str], rows: &[Vec<String>], color: bool) {
     let ncol = headers.len();
     let mut w = vec![0usize; ncol];
     for (i, h) in headers.iter().enumerate() {
@@ -196,29 +195,23 @@ fn print_table(headers: &[&str], rows: &[Vec<String>]) {
         }
     }
 
-    let border = |l: &str, m: &str, r: &str| {
-        let mut s = String::from(l);
+    let render_row = |cells: &[String]| {
+        let mut line = String::new();
         for (i, width) in w.iter().enumerate() {
-            s.push_str(&"─".repeat(width + 2));
-            s.push_str(if i + 1 == ncol { r } else { m });
+            let cell = cells.get(i).cloned().unwrap_or_default();
+            if i + 1 == ncol {
+                line.push_str(&cell); // last column: no trailing pad
+            } else {
+                line.push_str(&pad(&cell, *width));
+                line.push_str("  ");
+            }
         }
-        s
+        line
     };
 
-    println!("{}", border("┌", "┬", "┐"));
-    let mut hdr = String::from("│");
-    for (i, h) in headers.iter().enumerate() {
-        hdr.push_str(&format!(" {} │", pad(h, w[i])));
-    }
-    println!("{hdr}");
-    println!("{}", border("├", "┼", "┤"));
+    let header_cells: Vec<String> = headers.iter().map(|h| h.to_string()).collect();
+    println!("{}", paint(&render_row(&header_cells), DIM, color));
     for r in rows {
-        let mut line = String::from("│");
-        for (i, width) in w.iter().enumerate() {
-            let cell = r.get(i).cloned().unwrap_or_default();
-            line.push_str(&format!(" {} │", pad(&cell, *width)));
-        }
-        println!("{line}");
+        println!("{}", render_row(r));
     }
-    println!("{}", border("└", "┴", "┘"));
 }
